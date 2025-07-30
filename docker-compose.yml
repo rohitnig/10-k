@@ -5,16 +5,19 @@ services:
       dockerfile: Dockerfile.api
     container_name: rag_api
     shm_size: '2gb'
+    mem_limit: 4g
+    memswap_limit: 8g
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app
     environment:
       - CHROMA_HOST=chromadb
-      - PYTHONFAULTHANDLER=1
+      - GEMINI_API_KEY=${GEMINI_API_KEY} # Use environment variable from host
+      - MOCK_MODE=${MOCK_MODE:-false} # Enable mock mode for testing without Gemini API
     depends_on:
       chromadb:
-        condition: service_healthy 
+        condition: service_healthy
     restart: on-failure
 
   chromadb:
@@ -30,6 +33,24 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # --- NEW SERVICE FOR AUTOMATED INGESTION ---
+  ingestion_runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    shm_size: '2gb'
+    mem_limit: 4g
+    memswap_limit: 8g
+    environment:
+      - CHROMA_HOST=chromadb
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    command: ["python", "ingest.py"]
+    profiles:
+      - ingest
+  # --- END NEW SERVICE ---
 
 volumes:
   chroma_data:
