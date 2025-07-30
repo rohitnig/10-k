@@ -13,21 +13,21 @@ graph TD
     end
     
     subgraph "Offline Data Pipeline (One-time Script)"
-        Source["SEC EDGAR Database <br> (e.g., Google's 10-K Report)"] -- "1. Download & Parse" --> Preprocessing
-        Preprocessing["Python Script <br> (Semantic Chunking & Embedding)"] -- "2. Load Vectors" --> VectorDB
+        Source["SEC EDGAR Database <br> (e.g., Google's 10-K Report)"] -- "1> Download & Parse" --> Preprocessing
+        Preprocessing["Python Script <br> (Semantic Chunking & Embedding)"] -- "2> Load Vectors" --> VectorDB
     end
 
     %% Main Query Flow
     UserQuery["User asks question"] --> SPA
-    SPA -- "3. Sends Query to /query" --> API
-    API -- "4. Embeds Query & Searches DB" --> VectorDB
-    VectorDB -- "5. Returns Relevant Chunks" --> API
-    API -- "6. Creates Prompt with Context" --> LLM
-    LLM -- "7. Synthesizes Answer" --> API
-    API -- "8. Streams Answer + Source Citations" --> SPA
+    SPA -- "3> Sends Query to /query" --> API
+    API -- "4> Embeds Query & Searches DB" --> VectorDB
+    VectorDB -- "5> Returns Relevant Chunks" --> API
+    API -- "6> Creates Prompt with Context" --> LLM
+    LLM -- "7> Synthesizes Answer" --> API
+    API -- "8> Streams Answer + Source Citations" --> SPA
 
     %% User Feedback Flow
     Feedback["User gives feedback (👍/👎)"] --> SPA
-    SPA -- "9. Sends Feedback to /feedback" --> API
+    SPA -- "9> Sends Feedback to /feedback" --> API
 
 
