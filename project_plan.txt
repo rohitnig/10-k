@@ -1,0 +1,81 @@
+Project: "10-K Q&A" - High-Integrity RAG MVP
+
+Objective: Deliver a functional, single-page web application that provides accurate, source-grounded answers to natural language questions about a given 10-K financial report. The system must be reliable, reproducible, and built on sound engineering principles. "It works" is not the success metric; "it is trustworthy" is.
+
+Phase 1: Foundational Backend & Data Ingestion (ETA: End of Day)
+
+    Objective: Establish a stable, containerized backend and a robust, repeatable data ingestion pipeline. This phase is complete only when we have high-quality vectors in the database.
+
+    Key Results:
+
+        Orchestration: A docker-compose.yml file that starts and networks two services: fastapi and chromadb. No race conditions, no manual startup steps.
+
+        Data Ingestion Script (ingest.py): A standalone Python script that performs the following, flawlessly:
+
+            Downloads a specified 10-K report (we will use Google's as the canonical example).
+
+            Implements a semantically aware chunking strategy. Do not just split by character count. Use a recursive splitter that respects paragraphs and sentence boundaries. This is a non-negotiable quality gate.
+
+            Generates embeddings locally using the all-MiniLM-L6-v2 model.
+
+            Loads the chunks and their corresponding embeddings into the ChromaDB instance.
+
+        Validation: A simple test script that queries ChromaDB and verifies that the correct number of vectors have been loaded and can be retrieved.
+
+    Exit Criteria: The ChromaDB volume contains the complete, chunked, and embedded 10-K report. The ingestion process must be idempotent and repeatable.
+
+Phase 2: RAG Core API Logic (ETA: EOD + 1)
+
+    Objective: Build the core intelligence of the system. The API must be able to take a user question and retrieve relevant, verifiable context.
+
+    Key Results:
+
+        API Endpoint (/query): A single FastAPI endpoint that accepts a JSON payload with a user's question.
+
+        Query Transformation: The endpoint must take the raw question, generate an embedding using the same local model from Phase 1.
+
+        Context Retrieval: The endpoint must query ChromaDB with the new embedding and retrieve the top k most relevant text chunks.
+
+        Source-Grounded Context: The API response for this phase will not be an LLM-generated answer. It will be a structured JSON object containing the retrieved text chunks, each with its source metadata. This is a critical verification step.
+
+    Exit Criteria: We can send a question like "What were the main risks?" to the API and receive a JSON response containing the actual, verbatim paragraphs from the 10-K report that discuss risk factors.
+
+Phase 3: LLM Synthesis & Citation (ETA: EOD + 2)
+
+    Objective: Integrate the LLM to synthesize a human-readable answer, ensuring it is grounded in the retrieved context. Trust and verifiability are paramount.
+
+    Key Results:
+
+        Prompt Engineering: The API will construct a precise prompt for the Gemini API. The prompt must explicitly instruct the model to answer only using the provided context and to cite which chunks it used.
+
+        LLM Integration: The API will call the Gemini API with the context-rich prompt.
+
+        Structured Response: The API endpoint will be updated to return a final JSON object containing:
+
+            The synthesized answer.
+
+            A list of the verbatim source chunks used to generate that answer.
+
+    Exit Criteria: The API provides a complete, trustworthy response. The answer must be directly verifiable against the included source citations.
+
+Phase 4: Frontend UI (ETA: EOD + 3)
+
+    Objective: Build a clean, functional, and responsible user interface.
+
+    Key Results:
+
+        Single-Page Application: A single HTML file using Tailwind CSS and vanilla JavaScript.
+
+        Core Functionality: An input box for questions and a display area for the response.
+
+        Trust & Safety Features (Non-Negotiable):
+
+            The UI must clearly display the synthesized answer.
+
+            Below the answer, it must display the source citations in collapsible sections, allowing the user to verify the information.
+
+            A static, visible disclaimer: "AI-generated content. Please verify with the provided sources."
+
+            A simple thumbs up/down feedback mechanism that logs to the console.
+
+    Exit Criteria: A working web application that fulfills all the requirements of the project objective.
